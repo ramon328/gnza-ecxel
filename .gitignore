@@ -1,0 +1,4 @@
+.context/
+.playwright-mcp/
+*.png
+.DS_Store

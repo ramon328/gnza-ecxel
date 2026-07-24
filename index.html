@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Visor 3D — Modelos DWG</title>
+<style>
+  :root {
+    --bg: #16181d;
+    --panel: #1f232b;
+    --panel-2: #262b35;
+    --text: #e8eaf0;
+    --muted: #9aa3b2;
+    --accent: #4da3ff;
+    --border: #333a47;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+  }
+  #sidebar {
+    width: 280px;
+    min-width: 280px;
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    z-index: 10;
+  }
+  #sidebar header {
+    padding: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  #sidebar header h1 {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+  }
+  #sidebar header p {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+  .model-tabs {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .model-tab {
+    padding: 10px 12px;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text);
+    text-align: left;
+    transition: border-color .15s, background .15s;
+  }
+  .model-tab:hover { border-color: var(--accent); }
+  .model-tab.active {
+    border-color: var(--accent);
+    background: rgba(77,163,255,0.12);
+  }
+  .section-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    padding: 12px 16px 6px;
+  }
+  #solid-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 16px 12px;
+  }
+  .solid-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    font-size: 12.5px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .solid-item:hover { background: var(--panel-2); }
+  .solid-item .swatch {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    flex-shrink: 0;
+    border: 1px solid rgba(255,255,255,0.25);
+  }
+  .solid-item input { accent-color: var(--accent); }
+  .solid-item.hidden-solid { opacity: 0.45; }
+  #controls {
+    padding: 12px 16px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .ctrl-row { display: flex; gap: 8px; }
+  .btn {
+    flex: 1;
+    padding: 8px 10px;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    color: var(--text);
+    font-size: 12px;
+    cursor: pointer;
+    transition: border-color .15s;
+  }
+  .btn:hover { border-color: var(--accent); }
+  .btn.toggled {
+    border-color: var(--accent);
+    background: rgba(77,163,255,0.12);
+  }
+  #viewport { flex: 1; position: relative; }
+  #canvas-container { position: absolute; inset: 0; }
+  #hud {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    font-size: 11.5px;
+    color: var(--muted);
+    background: rgba(22,24,29,0.75);
+    padding: 8px 12px;
+    border-radius: 8px;
+    pointer-events: none;
+    line-height: 1.6;
+  }
+  #loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    font-size: 14px;
+    background: var(--bg);
+    z-index: 5;
+  }
+  #axis-hud {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 90px;
+    height: 90px;
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+  <div id="sidebar">
+    <header>
+      <h1>Visor 3D</h1>
+      <p>Modelos convertidos desde DWG</p>
+    </header>
+    <div class="model-tabs" id="model-tabs"></div>
+    <div class="section-title">Sólidos</div>
+    <div id="solid-list"></div>
+    <div id="controls">
+      <div class="ctrl-row">
+        <button class="btn" id="btn-fit">Centrar (F)</button>
+        <button class="btn" id="btn-wire">Alambre (W)</button>
+      </div>
+      <div class="ctrl-row">
+        <button class="btn toggled" id="btn-grid">Rejilla (G)</button>
+        <button class="btn toggled" id="btn-axes">Ejes XYZ (A)</button>
+      </div>
+      <div class="ctrl-row">
+        <button class="btn toggled" id="btn-layout">Cuadrícula (O)</button>
+      </div>
+    </div>
+  </div>
+  <div id="viewport">
+    <div id="canvas-container"></div>
+    <canvas id="axis-hud" width="180" height="180"></canvas>
+    <div id="hud">
+      <b>Rotar:</b> clic izquierdo &nbsp;·&nbsp; <b>Pan:</b> clic derecho &nbsp;·&nbsp; <b>Zoom:</b> rueda<br>
+      <span id="hud-info"></span>
+    </div>
+    <div id="loading">Cargando modelo…</div>
+  </div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.164.1/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.164.1/examples/jsm/"
+  }
+}
+</script>
+<script type="module" src="viewer.js"></script>
+</body>
+</html>
