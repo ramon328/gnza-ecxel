@@ -12,6 +12,17 @@ function smoothGeometry(geometry) {
   return g;
 }
 
+const edgeMaterial = new THREE.LineBasicMaterial({ color: 0x232933 });
+
+// Aristas estilo plano CAD: contornos y quiebres >25 grados.
+function attachEdges(mesh) {
+  const eg = new THREE.EdgesGeometry(mesh.geometry, 25);
+  const lines = new THREE.LineSegments(eg, edgeMaterial);
+  lines.userData.isEdges = true;
+  lines.visible = showEdges;
+  mesh.add(lines);
+}
+
 const MODELS = {
   barrera_armada: {
     label: 'Barrera antivuelco — armada',
@@ -110,6 +121,7 @@ let gridHelper = null;
 let axesHelper = null;
 let modelGroup = null;
 let wireframe = false;
+let showEdges = true;
 let currentModel = null;
 const solidMeshes = []; // { name, meshes[], color, visible }
 
@@ -275,8 +287,12 @@ async function loadModel(key) {
       metalness: 0.25,
       roughness: 0.45,
       side: THREE.DoubleSide,
+      polygonOffset: true,
+      polygonOffsetFactor: 1,
+      polygonOffsetUnits: 1,
     });
     const mesh = new THREE.Mesh(smoothGeometry(child.geometry), mat);
+    attachEdges(mesh);
     modelGroup.add(mesh);
     totalTris += (child.geometry.index
       ? child.geometry.index.count
@@ -316,6 +332,15 @@ for (const [key2, m] of Object.entries(MODELS)) {
 }
 
 document.getElementById('btn-fit').addEventListener('click', () => fitView());
+document.getElementById('btn-edges').addEventListener('click', (e) => {
+  showEdges = !showEdges;
+  e.currentTarget.classList.toggle('toggled', showEdges);
+  if (modelGroup) {
+    modelGroup.traverse((o) => {
+      if (o.userData.isEdges) o.visible = showEdges;
+    });
+  }
+});
 document.getElementById('btn-layout').addEventListener('click', (e) => {
   gridLayout = !gridLayout;
   e.currentTarget.classList.toggle('toggled', gridLayout);
@@ -343,6 +368,7 @@ window.addEventListener('keydown', (e) => {
   const k = e.key.toLowerCase();
   if (k === 'f') fitView();
   if (k === 'o') document.getElementById('btn-layout').click();
+  if (k === 'b') document.getElementById('btn-edges').click();
   if (k === 'w') document.getElementById('btn-wire').click();
   if (k === 'g') document.getElementById('btn-grid').click();
   if (k === 'a') document.getElementById('btn-axes').click();
@@ -405,8 +431,10 @@ function showDropped(objectOrGeometry, label) {
   if (objectOrGeometry.isBufferGeometry) {
     const mat = new THREE.MeshStandardMaterial({
       color: 0x9aa5b1, metalness: 0.35, roughness: 0.55, side: THREE.DoubleSide,
+      polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1,
     });
     meshes = [new THREE.Mesh(smoothGeometry(objectOrGeometry), mat)];
+    attachEdges(meshes[0]);
   } else {
     let idx = 0;
     objectOrGeometry.traverse((c) => {
@@ -414,8 +442,11 @@ function showDropped(objectOrGeometry, label) {
       const mat = new THREE.MeshStandardMaterial({
         color: FALLBACK_PALETTE[idx % FALLBACK_PALETTE.length],
         metalness: 0.35, roughness: 0.55, side: THREE.DoubleSide,
+        polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1,
       });
-      meshes.push(new THREE.Mesh(smoothGeometry(c.geometry), mat));
+      const dm = new THREE.Mesh(smoothGeometry(c.geometry), mat);
+      attachEdges(dm);
+      meshes.push(dm);
       idx++;
     });
   }
