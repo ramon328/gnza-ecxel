@@ -18,12 +18,17 @@ const MODELS = {
     file: 'models/barrera_armada.obj',
     assembled: true,
   },
+  enganche_armado: {
+    label: 'Enganche Hilux — armado',
+    file: 'models/enganche_armado.obj',
+    assembled: true,
+  },
   barrera: {
-    label: 'Barrera — piezas',
+    label: 'Barrera — piezas DWG',
     file: 'models/barrera.obj',
   },
   enganche: {
-    label: 'Enganche Hilux — piezas',
+    label: 'Enganche — piezas DWG',
     file: 'models/enganche.obj',
   },
 };
@@ -47,6 +52,29 @@ const FALLBACK_PALETTE = [
   0x9fa4b4, 0xaaa89e, 0xa39ead, 0x97aaa8, 0xac9ea4,
   0xa0ab9c, 0x9aa0b8,
 ];
+
+// Colores por pieza para los modelos armados (estilo vista 3D de la lamina).
+const NAME_COLORS = [
+  ['arco', 0x5b7fb5],
+  ['pata', 0x5fa88a],
+  ['placas_base', 0xd28bb0],
+  ['placas', 0x8f9bb0],
+  ['discos', 0xe0913f],
+  ['pertiga', 0xb5a05f],
+  ['focos', 0x6a6f78],
+  ['anclaje', 0xc98b5a],
+  ['malla', 0x9aa4b0],
+  ['barra', 0x5b7fb5],
+  ['soporte', 0x5fa88a],
+  ['bola', 0xe0913f],
+];
+
+function colorForName(name) {
+  for (const [prefix, c] of NAME_COLORS) {
+    if (name.startsWith(prefix)) return c;
+  }
+  return null;
+}
 
 const container = document.getElementById('canvas-container');
 const loadingEl = document.getElementById('loading');
@@ -188,7 +216,9 @@ function renderSolidList() {
     sw.className = 'swatch';
     sw.style.background = '#' + s.color.toString(16).padStart(6, '0');
     const txt = document.createElement('span');
-    txt.textContent = `Sólido ${i + 1}`;
+    txt.textContent = /^solid_\d+$/.test(s.name)
+      ? `Sólido ${i + 1}`
+      : s.name.replace(/_/g, ' ');
     txt.title = 'Clic para centrar';
     txt.style.cursor = 'zoom-in';
     txt.addEventListener('click', (ev) => {
@@ -232,9 +262,12 @@ async function loadModel(key) {
   for (const child of [...obj.children]) {
     if (!child.isMesh) continue;
     const aci = acis[idx] !== undefined ? acis[idx] : 256;
-    const color = allBylayer
-      ? FALLBACK_PALETTE[idx % FALLBACK_PALETTE.length]
-      : (ACI_COLORS[aci] || 0x9aa5b1);
+    const named = colorForName(child.name || '');
+    const color = named !== null
+      ? named
+      : (allBylayer
+        ? FALLBACK_PALETTE[idx % FALLBACK_PALETTE.length]
+        : (ACI_COLORS[aci] || 0x9aa5b1));
     const mat = new THREE.MeshStandardMaterial({
       color,
       metalness: 0.25,

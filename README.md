@@ -3,11 +3,19 @@
 Visor web (three.js) para los modelos 3D:
 
 - **Barrera antivuelco — armada** (`models/barrera_armada.obj`): ensamble
-  reconstruido paramétricamente según la planimetría (arco + patas + placas
-  base + discos baliza). Los DWG solo contienen las piezas sueltas de
-  fabricación, no el conjunto armado.
-- **Barrera — piezas** (`models/barrera.obj`, 12 sólidos)
-- **Enganche Hilux — piezas** (`models/enganche.obj`, 11 sólidos)
+  completo según la lámina L1 — arco, patas, placas base, discos baliza,
+  pértigas, focos, anclaje y mallas luneta.
+- **Enganche Hilux — armado** (`models/enganche_armado.obj`): placas
+  laterales, barra 50×50×1040, soporte central, placa y bola de enganche,
+  con las dimensiones medidas de las piezas del DWG.
+- **Barrera / Enganche — piezas DWG** (`models/barrera.obj`,
+  `models/enganche.obj`): las piezas tal como vienen en los DWG
+  (escala corregida ÷25.4; los DWG están dibujados en pulgadas).
+
+Ambos armados se generan con `tools_build_armados.py`. Los DWG no contienen
+el conjunto montado y sus superficies spline (tramos curvos barridos) usan
+referencias ACIS que ningún conversor libre reconstruye completas — por eso
+el ensamble se modela paramétrico con las dimensiones de la planimetría.
 
 ## Uso
 
