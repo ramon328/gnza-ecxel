@@ -1,7 +1,6 @@
 # Visor 3D — Modelos DWG
 
-Visor web (three.js) para los 10 productos, cada uno en versión **armada**
-y **piezas DWG**:
+Visor web (three.js) con los 10 productos armados:
 
 - Barra exterior 6M (arco, patas, placas, discos baliza, pértigas, focos,
   anclaje y malla luneta según la lámina L1)
@@ -13,9 +12,7 @@ Los armados se generan con `tools_build_armados.py`. Los DWG no contienen
 los conjuntos montados (las piezas vienen dispersas como lámina de despiece)
 y sus tramos de tubo curvo usan superficies spline con referencias ACIS que
 ningún conversor libre reconstruye — por eso los ensambles se modelan
-paramétricos con las dimensiones de la planimetría y de las piezas. Las
-vistas "piezas" muestran los sólidos reales de cada DWG (escala corregida:
-varios archivos están dibujados a 25.4:1, en pulgadas).
+paramétricos con las dimensiones de la planimetría y de las piezas.
 
 ## Uso
 
