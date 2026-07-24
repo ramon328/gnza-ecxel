@@ -186,6 +186,85 @@ function fitView(target) {
   controls.update();
 }
 
+// ---- Animacion de entrada: vuelo de camara + piezas apareciendo ----
+let introToken = 0;
+
+function cancelIntro() {
+  introToken++;
+  for (const s of solidMeshes) {
+    for (const m of s.meshes) {
+      m.material.opacity = 1;
+      m.material.transparent = false;
+    }
+  }
+  edgeMaterial.opacity = 1;
+  edgeMaterial.transparent = false;
+}
+
+function startIntro() {
+  if (!modelGroup) return;
+  cancelIntro();
+  const token = introToken;
+  const box = new THREE.Box3().setFromObject(modelGroup);
+  if (box.isEmpty()) return;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    fitView();
+    return;
+  }
+  const center = box.getCenter(new THREE.Vector3());
+  const sphere = box.getBoundingSphere(new THREE.Sphere());
+  const endDist = sphere.radius / Math.tan((camera.fov * Math.PI) / 360) * 1.15;
+  const endDir = new THREE.Vector3(1, -1, 0.7).normalize();
+  const startDist = endDist * 2.4;
+  const swing = -1.15; // radianes de giro alrededor de Z durante la entrada
+
+  camera.near = endDist / 100;
+  camera.far = startDist * 120;
+  camera.updateProjectionMatrix();
+  controls.target.copy(center);
+
+  const meshes = solidMeshes.map((s) => s.meshes[0]);
+  for (const m of meshes) {
+    m.material.transparent = true;
+    m.material.opacity = 0;
+  }
+  edgeMaterial.transparent = true;
+  edgeMaterial.opacity = 0;
+
+  const DUR = 1700;
+  const STAG = Math.min(110, 700 / Math.max(1, meshes.length));
+  const FADE = 420;
+  const t0 = performance.now();
+  const ease = (t) => 1 - Math.pow(1 - t, 3);
+
+  function tick(now) {
+    if (token !== introToken) return;
+    const t = Math.min(1, (now - t0) / DUR);
+    const e = ease(t);
+    const dir = endDir.clone().applyAxisAngle(new THREE.Vector3(0, 0, 1), swing * (1 - e));
+    const d = startDist + (endDist - startDist) * e;
+    camera.position.copy(center).addScaledVector(dir.normalize(), d);
+    controls.update();
+    meshes.forEach((m, i) => {
+      const mt = Math.min(1, Math.max(0, (now - t0 - i * STAG) / FADE));
+      m.material.opacity = ease(mt);
+    });
+    edgeMaterial.opacity = Math.min(1, Math.max(0, (now - t0 - 300) / (DUR - 300)));
+    if (t < 1 || meshes.some((m) => m.material.opacity < 1)) {
+      requestAnimationFrame(tick);
+    } else {
+      cancelIntro();
+      fitView();
+    }
+  }
+  requestAnimationFrame(tick);
+}
+
+// El usuario corta la animacion al interactuar.
+controls.addEventListener('start', () => {
+  if (solidMeshes.length) cancelIntro();
+});
+
 let gridLayout = true;
 
 // The DWG modelspace has the parts scattered like a fabrication drawing.
@@ -325,7 +404,7 @@ async function loadModel(key) {
   const sphere = box.getBoundingSphere(new THREE.Sphere());
   const size = box.getSize(new THREE.Vector3());
   buildHelpers(sphere.radius, sphere.center);
-  fitView();
+  startIntro();
   renderSolidList();
 
   hudInfo.textContent =
@@ -475,7 +554,7 @@ function showDropped(objectOrGeometry, label) {
   modelGroup.updateMatrixWorld(true);
   const sphere = new THREE.Box3().setFromObject(modelGroup).getBoundingSphere(new THREE.Sphere());
   buildHelpers(sphere.radius, sphere.center);
-  fitView();
+  startIntro();
   renderSolidList();
   hudInfo.textContent = `${label} — ${meshes.length} piezas (archivo local)`;
   loadingEl.style.display = 'none';
