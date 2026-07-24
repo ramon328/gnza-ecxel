@@ -248,8 +248,8 @@ for sx in (-1, 1):
 start_group('anclaje')
 box(0, 40, H-40, 410, 180, 8, rot_z=0)
 
-# Mallas luneta: 2 paneles enrejados entre el arco y la vertical
-start_group('malla_luneta_1')
+# Malla luneta: panel enrejado continuo detras del arco
+start_group('malla_luneta')
 
 
 def malla(x0, x1, z0, z1, y, nx, nz, r=6):
@@ -261,9 +261,7 @@ def malla(x0, x1, z0, z1, y, nx, nz, r=6):
         cylinder((x0, y, z), (x1, y, z), r, nseg=8, cap=False)
 
 
-malla(-560, -40, 350, 950, -15, 5, 6)
-start_group('malla_luneta_2')
-malla(40, 560, 350, 950, -15, 5, 6)
+malla(-560, 560, 350, 950, -15, 10, 6)
 
 write_obj('models/barrera_armada.obj')
 

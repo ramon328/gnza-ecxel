@@ -23,14 +23,16 @@ const MODELS = {
     file: 'models/enganche_armado.obj',
     assembled: true,
   },
-  barrera: {
-    label: 'Barrera — piezas DWG',
-    file: 'models/barrera.obj',
-  },
-  enganche: {
-    label: 'Enganche — piezas DWG',
-    file: 'models/enganche.obj',
-  },
+  barra_ext_6m: { label: 'Barra exterior 6M — piezas', file: 'models/barra_ext_6m.obj' },
+  barra_int_hilux: { label: 'Barra interior Hilux — piezas', file: 'models/barra_int_hilux.obj' },
+  barra_int_l200: { label: 'Barra interior L200 — piezas', file: 'models/barra_int_l200.obj' },
+  barra_int_colorado: { label: 'Barra interior Colorado — piezas', file: 'models/barra_int_colorado.obj' },
+  barra_int_poer: { label: 'Barra interior POER — piezas', file: 'models/barra_int_poer.obj' },
+  enganche_hilux: { label: 'Enganche Hilux — piezas', file: 'models/enganche_hilux.obj' },
+  enganche_l200: { label: 'Enganche L200 — piezas', file: 'models/enganche_l200.obj' },
+  portarruedas_kitcar: { label: 'Portarruedas Kitcar — piezas', file: 'models/portarruedas_kitcar.obj' },
+  portarruedas_mitta: { label: 'Portarruedas Mitta — piezas', file: 'models/portarruedas_mitta.obj' },
+  portarruedas_tipo_t: { label: 'Portarruedas Tipo T — piezas', file: 'models/portarruedas_tipo_t.obj' },
 };
 
 // AutoCAD ACI colors per solid index (from the DWG), softened for viewing.
