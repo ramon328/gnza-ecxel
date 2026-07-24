@@ -2,6 +2,15 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
 import { STLLoader } from 'three/addons/loaders/STLLoader.js';
+import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
+
+// Weld duplicated vertices and smooth normals (30° crease) so the tubes
+// render like the CAD drawings instead of showing tessellation facets.
+function smoothGeometry(geometry) {
+  let g = BufferGeometryUtils.mergeVertices(geometry, 1e-4);
+  g = BufferGeometryUtils.toCreasedNormals(g, Math.PI / 6);
+  return g;
+}
 
 const MODELS = {
   barrera: {
@@ -27,10 +36,11 @@ const SOLID_ACI = {
   barrera: [256, 256, 256, 256, 256, 256, 256, 256, 256, 256, 256, 256],
 };
 // Fallback palette when everything is bylayer, so parts are distinguishable.
+// Steel grays with subtle tints, like the shaded views in the drawings.
 const FALLBACK_PALETTE = [
-  0x8f9aa8, 0x6f8fb5, 0xa8937a, 0x7fa886, 0xb58f6f,
-  0x86a0b5, 0xb5a86f, 0x9a86b5, 0x6fb5a8, 0xb56f86,
-  0x86b56f, 0x6f7ab5,
+  0x9aa2ac, 0x98a0b0, 0xa4a8ae, 0x9ba8a4, 0xaba49c,
+  0x9fa4b4, 0xaaa89e, 0xa39ead, 0x97aaa8, 0xac9ea4,
+  0xa0ab9c, 0x9aa0b8,
 ];
 
 const container = document.getElementById('canvas-container');
@@ -43,7 +53,7 @@ renderer.setSize(container.clientWidth, container.clientHeight);
 container.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x16181d);
+scene.background = new THREE.Color(0xf2f3f5);
 
 const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100000);
 camera.up.set(0, 0, 1); // CAD convention: Z up
@@ -51,14 +61,14 @@ const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.08;
 
-scene.add(new THREE.AmbientLight(0xffffff, 0.45));
-const key = new THREE.DirectionalLight(0xffffff, 1.6);
+scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+const key = new THREE.DirectionalLight(0xffffff, 1.4);
 key.position.set(1, -1, 1.5);
 scene.add(key);
-const fill = new THREE.DirectionalLight(0xffffff, 0.6);
+const fill = new THREE.DirectionalLight(0xffffff, 0.55);
 fill.position.set(-1.2, 1, -0.6);
 scene.add(fill);
-const hemi = new THREE.HemisphereLight(0xdde4f0, 0x30343c, 0.5);
+const hemi = new THREE.HemisphereLight(0xffffff, 0x8a929e, 0.55);
 scene.add(hemi);
 
 let gridHelper = null;
@@ -86,7 +96,7 @@ function buildHelpers(radius, center) {
   if (gridHelper) scene.remove(gridHelper);
   if (axesHelper) scene.remove(axesHelper);
   const size = Math.pow(10, Math.ceil(Math.log10(radius * 2.5)));
-  gridHelper = new THREE.GridHelper(size, 20, 0x3a4150, 0x262b35);
+  gridHelper = new THREE.GridHelper(size, 20, 0xb8bfc9, 0xdcdfe4);
   gridHelper.rotation.x = Math.PI / 2; // grid on XY plane (Z up)
   gridHelper.position.set(center.x, center.y, 0);
   gridHelper.visible = document.getElementById('btn-grid').classList.contains('toggled');
@@ -217,12 +227,11 @@ async function loadModel(key) {
       : (ACI_COLORS[aci] || 0x9aa5b1);
     const mat = new THREE.MeshStandardMaterial({
       color,
-      metalness: 0.35,
-      roughness: 0.55,
+      metalness: 0.25,
+      roughness: 0.45,
       side: THREE.DoubleSide,
     });
-    child.geometry.computeVertexNormals();
-    const mesh = new THREE.Mesh(child.geometry, mat);
+    const mesh = new THREE.Mesh(smoothGeometry(child.geometry), mat);
     modelGroup.add(mesh);
     totalTris += (child.geometry.index
       ? child.geometry.index.count
@@ -352,8 +361,7 @@ function showDropped(objectOrGeometry, label) {
     const mat = new THREE.MeshStandardMaterial({
       color: 0x9aa5b1, metalness: 0.35, roughness: 0.55, side: THREE.DoubleSide,
     });
-    objectOrGeometry.computeVertexNormals();
-    meshes = [new THREE.Mesh(objectOrGeometry, mat)];
+    meshes = [new THREE.Mesh(smoothGeometry(objectOrGeometry), mat)];
   } else {
     let idx = 0;
     objectOrGeometry.traverse((c) => {
@@ -362,8 +370,7 @@ function showDropped(objectOrGeometry, label) {
         color: FALLBACK_PALETTE[idx % FALLBACK_PALETTE.length],
         metalness: 0.35, roughness: 0.55, side: THREE.DoubleSide,
       });
-      c.geometry.computeVertexNormals();
-      meshes.push(new THREE.Mesh(c.geometry, mat));
+      meshes.push(new THREE.Mesh(smoothGeometry(c.geometry), mat));
       idx++;
     });
   }
