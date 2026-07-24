@@ -248,20 +248,33 @@ for sx in (-1, 1):
 start_group('anclaje')
 box(0, 40, H-40, 410, 180, 8, rot_z=0)
 
-# Malla luneta: panel enrejado continuo detras del arco
+# Malla luneta: marco perimetral con esquinas redondeadas + enrejado fino,
+# alambres rematados contra el eje del marco.
 start_group('malla_luneta')
 
 
-def malla(x0, x1, z0, z1, y, nx, nz, r=6):
-    for i in range(nx+1):
+def malla(x0, x1, z0, z1, y, nx, nz, frame_r=8, wire_r=2.5, corner=45):
+    frame_pts = [
+        (x0+corner, y, z0), (x1-corner, y, z0), (x1, y, z0+corner),
+        (x1, y, z1-corner), (x1-corner, y, z1), (x0+corner, y, z1),
+        (x0, y, z1-corner), (x0, y, z0+corner), (x0+corner, y, z0),
+    ]
+    # cerrar el anillo con fillets en las 4 esquinas
+    ring = fillet_path([list(p) for p in [
+        ((x0+x1)/2, y, z0),
+        (x1, y, z0), (x1, y, z1), (x0, y, z1), (x0, y, z0),
+        ((x0+x1)/2, y, z0),
+    ]], r=corner)
+    sweep_tube(ring, radius=frame_r, cap=False)
+    for i in range(1, nx):
         x = x0 + (x1-x0)*i/nx
-        cylinder((x, y, z0), (x, y, z1), r, nseg=8, cap=False)
-    for j in range(nz+1):
+        cylinder((x, y, z0), (x, y, z1), wire_r, nseg=10, cap=False)
+    for j in range(1, nz):
         z = z0 + (z1-z0)*j/nz
-        cylinder((x0, y, z), (x1, y, z), r, nseg=8, cap=False)
+        cylinder((x0, y, z), (x1, y, z), wire_r, nseg=10, cap=False)
 
 
-malla(-560, 560, 350, 950, -15, 10, 6)
+malla(-545, 545, 360, 940, -15, 14, 8)
 
 write_obj('models/barrera_armada.obj')
 
@@ -293,3 +306,152 @@ cylinder((205, 0, -35), (205, 0, 25), 15)   # cuello
 sphere((205, 0, 45), 37.5)
 
 write_obj('models/enganche_armado.obj')
+
+
+def torus(c, R, r, axis='y', nseg=36, ntube=14):
+    """Neumatico / aro: toro con eje en 'axis'."""
+    rows = []
+    for i in range(nseg):
+        a = 2*math.pi*i/nseg
+        ring = []
+        for k in range(ntube):
+            b = 2*math.pi*k/ntube
+            rr = R + r*math.cos(b)
+            h = r*math.sin(b)
+            if axis == 'y':
+                p = (c[0]+rr*math.cos(a), c[1]+h, c[2]+rr*math.sin(a))
+            else:
+                p = (c[0]+rr*math.cos(a), c[1]+rr*math.sin(a), c[2]+h)
+            ring.append(add_vert(p))
+        rows.append(ring)
+    for i in range(nseg):
+        r0, r1 = rows[i], rows[(i+1) % nseg]
+        for k in range(ntube):
+            k2 = (k+1) % ntube
+            faces.append((r0[k], r1[k], r1[k2]))
+            faces.append((r0[k], r1[k2], r0[k2]))
+
+
+# ================= ENGANCHE L200 =================
+reset()
+start_group('placas_laterales')
+for sy in (-1, 1):
+    box(0, sy*540, 0, 400, 6, 250)
+start_group('barra_transversal')
+box(0, 0, -55, 60, 1150, 60)
+start_group('soporte_central')
+box(100, 0, -60, 200, 190, 80)
+start_group('placa_bola')
+box(195, 0, -50, 110, 160, 20)
+start_group('bola')
+cylinder((215, 0, -40), (215, 0, 20), 15)
+sphere((215, 0, 40), 37.5)
+write_obj('models/enganche_l200_armado.obj')
+
+
+# ================= BARRAS INTERIORES =================
+def barra_interior(path_out, W, Htop, Hleg, brace_depth, tube_r=30):
+    reset()
+    start_group('arco_interior')
+    hw = W/2
+    pts = [
+        (-hw, 0, 0), (-hw, 0, Hleg),
+        (-hw+60, 0, Htop-40),
+        (-hw+260, 0, Htop),
+        (hw-260, 0, Htop),
+        (hw-60, 0, Htop-40),
+        (hw, 0, Hleg), (hw, 0, 0),
+    ]
+    sweep_tube(fillet_path([list(p) for p in pts], r=150), radius=tube_r)
+    start_group('brazos_apoyo')
+    for sx in (-1, 1):
+        bp = [
+            (sx*(hw-260), -20, Htop-10),
+            (sx*(hw-180), brace_depth*0.55, Htop*0.55),
+            (sx*(hw-140), brace_depth, 60),
+            (sx*(hw-140), brace_depth, 0),
+        ]
+        sweep_tube(fillet_path([list(p) for p in bp], r=120), radius=tube_r*0.8)
+    start_group('placas_base')
+    for sx in (-1, 1):
+        box(sx*hw, 0, 4, 90, 160, 8)
+        box(sx*(hw-140), brace_depth, 4, 90, 160, 8)
+    start_group('refuerzo_horizontal')
+    box(0, 0, Htop-140, W-520, 40, 40)
+    write_obj(path_out)
+
+
+barra_interior('models/barra_int_hilux_armada.obj', 1360, 520, 300, 520)
+barra_interior('models/barra_int_l200_armada.obj', 1380, 540, 310, 540)
+barra_interior('models/barra_int_colorado_armada.obj', 1400, 530, 300, 530)
+barra_interior('models/barra_int_poer_armada.obj', 1370, 525, 305, 525)
+
+
+# ================= PORTARRUEDAS =================
+def rueda(c, axis='y'):
+    start_group('neumatico')
+    torus(c, 260, 105, axis=axis)
+    start_group('llanta')
+    if axis == 'y':
+        cylinder((c[0], c[1]-40, c[2]), (c[0], c[1]+40, c[2]), 165, nseg=28)
+    else:
+        cylinder((c[0], c[1], c[2]-40), (c[0], c[1], c[2]+40), 165, nseg=28)
+
+
+# --- Tipo MITTA: bastidor vertical de 2 postes ---
+reset()
+start_group('placa_base')
+box(0, 0, 5, 460, 340, 10)
+start_group('postes')
+for sx in (-1, 1):
+    box(sx*150, 0, 705, 40, 40, 1400)
+start_group('travesano')
+box(0, 0, 1385, 340, 40, 40)
+box(0, 0, 760, 340, 40, 40)
+start_group('placa_rueda')
+box(0, 30, 900, 320, 8, 320)
+start_group('esparragos')
+for a in range(5):
+    ang = 2*math.pi*a/5
+    cylinder((110*math.cos(ang), 34, 900+110*math.sin(ang)),
+             (110*math.cos(ang), 95, 900+110*math.sin(ang)), 9, nseg=10)
+rueda((0, 160, 900))
+write_obj('models/portarruedas_mitta_armado.obj')
+
+# --- Tipo T: poste central con brazo ---
+reset()
+start_group('placa_base')
+box(0, 0, 5, 320, 320, 10)
+start_group('poste')
+box(0, 0, 505, 75, 75, 1000)
+start_group('brazo_t')
+box(0, 0, 1030, 620, 75, 75)
+start_group('placa_rueda')
+box(0, 42, 650, 300, 8, 300)
+start_group('esparragos')
+for a in range(5):
+    ang = 2*math.pi*a/5
+    cylinder((105*math.cos(ang), 46, 650+105*math.sin(ang)),
+             (105*math.cos(ang), 105, 650+105*math.sin(ang)), 9, nseg=10)
+rueda((0, 170, 650))
+write_obj('models/portarruedas_tipo_t_armado.obj')
+
+# --- Tipo KITCAR: brazo pendular con bisagra ---
+reset()
+start_group('placa_base')
+box(0, 0, 5, 300, 220, 10)
+start_group('poste_bisagra')
+cylinder((0, 0, 10), (0, 0, 820), 30)
+start_group('brazo')
+box(330, 0, 780, 640, 60, 60)
+start_group('placa_rueda')
+box(560, 34, 560, 300, 8, 300)
+start_group('esparragos')
+for a in range(5):
+    ang = 2*math.pi*a/5
+    cylinder((560+105*math.cos(ang), 38, 560+105*math.sin(ang)),
+             (560+105*math.cos(ang), 98, 560+105*math.sin(ang)), 9, nseg=10)
+start_group('tirante')
+sweep_tube([[330, 0, 780], [560, 0, 700]], radius=12)
+rueda((560, 160, 560))
+write_obj('models/portarruedas_kitcar_armado.obj')

@@ -1,21 +1,21 @@
 # Visor 3D — Modelos DWG
 
-Visor web (three.js) para los modelos 3D:
+Visor web (three.js) para los 10 productos, cada uno en versión **armada**
+y **piezas DWG**:
 
-- **Barrera antivuelco — armada** (`models/barrera_armada.obj`): ensamble
-  completo según la lámina L1 — arco, patas, placas base, discos baliza,
-  pértigas, focos, anclaje y mallas luneta.
-- **Enganche Hilux — armado** (`models/enganche_armado.obj`): placas
-  laterales, barra 50×50×1040, soporte central, placa y bola de enganche,
-  con las dimensiones medidas de las piezas del DWG.
-- **Barrera / Enganche — piezas DWG** (`models/barrera.obj`,
-  `models/enganche.obj`): las piezas tal como vienen en los DWG
-  (escala corregida ÷25.4; los DWG están dibujados en pulgadas).
+- Barra exterior 6M (arco, patas, placas, discos baliza, pértigas, focos,
+  anclaje y malla luneta según la lámina L1)
+- Barras interiores: Hilux, L200, Colorado, GWM POER
+- Enganches: Hilux, L200
+- Portarruedas: Kitcar, Mitta, Tipo T (con neumático de referencia)
 
-Ambos armados se generan con `tools_build_armados.py`. Los DWG no contienen
-el conjunto montado y sus superficies spline (tramos curvos barridos) usan
-referencias ACIS que ningún conversor libre reconstruye completas — por eso
-el ensamble se modela paramétrico con las dimensiones de la planimetría.
+Los armados se generan con `tools_build_armados.py`. Los DWG no contienen
+los conjuntos montados (las piezas vienen dispersas como lámina de despiece)
+y sus tramos de tubo curvo usan superficies spline con referencias ACIS que
+ningún conversor libre reconstruye — por eso los ensambles se modelan
+paramétricos con las dimensiones de la planimetría y de las piezas. Las
+vistas "piezas" muestran los sólidos reales de cada DWG (escala corregida:
+varios archivos están dibujados a 25.4:1, en pulgadas).
 
 ## Uso
 

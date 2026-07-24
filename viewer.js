@@ -24,16 +24,16 @@ function attachEdges(mesh) {
 }
 
 const MODELS = {
-  barrera_armada: {
-    label: 'Barrera antivuelco — armada',
-    file: 'models/barrera_armada.obj',
-    assembled: true,
-  },
-  enganche_armado: {
-    label: 'Enganche Hilux — armado',
-    file: 'models/enganche_armado.obj',
-    assembled: true,
-  },
+  barrera_armada: { label: 'Barra exterior 6M — armada', file: 'models/barrera_armada.obj', assembled: true },
+  barra_int_hilux_armada: { label: 'Barra interior Hilux — armada', file: 'models/barra_int_hilux_armada.obj', assembled: true },
+  barra_int_l200_armada: { label: 'Barra interior L200 — armada', file: 'models/barra_int_l200_armada.obj', assembled: true },
+  barra_int_colorado_armada: { label: 'Barra interior Colorado — armada', file: 'models/barra_int_colorado_armada.obj', assembled: true },
+  barra_int_poer_armada: { label: 'Barra interior POER — armada', file: 'models/barra_int_poer_armada.obj', assembled: true },
+  enganche_armado: { label: 'Enganche Hilux — armado', file: 'models/enganche_armado.obj', assembled: true },
+  enganche_l200_armado: { label: 'Enganche L200 — armado', file: 'models/enganche_l200_armado.obj', assembled: true },
+  portarruedas_kitcar_armado: { label: 'Portarruedas Kitcar — armado', file: 'models/portarruedas_kitcar_armado.obj', assembled: true },
+  portarruedas_mitta_armado: { label: 'Portarruedas Mitta — armado', file: 'models/portarruedas_mitta_armado.obj', assembled: true },
+  portarruedas_tipo_t_armado: { label: 'Portarruedas Tipo T — armado', file: 'models/portarruedas_tipo_t_armado.obj', assembled: true },
   barra_ext_6m: { label: 'Barra exterior 6M — piezas', file: 'models/barra_ext_6m.obj' },
   barra_int_hilux: { label: 'Barra interior Hilux — piezas', file: 'models/barra_int_hilux.obj' },
   barra_int_l200: { label: 'Barra interior L200 — piezas', file: 'models/barra_int_l200.obj' },
@@ -80,6 +80,15 @@ const NAME_COLORS = [
   ['barra', 0x5b7fb5],
   ['soporte', 0x5fa88a],
   ['bola', 0xe0913f],
+  ['neumatico', 0x3a3d42],
+  ['llanta', 0xb8bec6],
+  ['poste', 0x5b7fb5],
+  ['travesano', 0x5fa88a],
+  ['brazo', 0x5fa88a],
+  ['refuerzo', 0x5fa88a],
+  ['tirante', 0x8f97a2],
+  ['esparragos', 0x8f97a2],
+  ['placa', 0xd28bb0],
 ];
 
 function colorForName(name) {
@@ -261,7 +270,7 @@ async function loadModel(key) {
   const loader = new OBJLoader();
   let obj;
   try {
-    obj = await loader.loadAsync(MODELS[key].file);
+    obj = await loader.loadAsync(MODELS[key].file + '?t=' + Date.now());
   } catch (e) {
     loadingEl.textContent = 'Error cargando ' + MODELS[key].file;
     return;
