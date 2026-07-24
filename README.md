@@ -2,8 +2,12 @@
 
 Visor web (three.js) para los modelos 3D:
 
-- **Barrera antivuelco exterior** (`models/barrera.obj`, 12 sólidos)
-- **Enganche modelo Hilux** (`models/enganche.obj`, 11 sólidos)
+- **Barrera antivuelco — armada** (`models/barrera_armada.obj`): ensamble
+  reconstruido paramétricamente según la planimetría (arco + patas + placas
+  base + discos baliza). Los DWG solo contienen las piezas sueltas de
+  fabricación, no el conjunto armado.
+- **Barrera — piezas** (`models/barrera.obj`, 12 sólidos)
+- **Enganche Hilux — piezas** (`models/enganche.obj`, 11 sólidos)
 
 ## Uso
 

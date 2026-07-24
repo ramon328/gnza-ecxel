@@ -13,12 +13,17 @@ function smoothGeometry(geometry) {
 }
 
 const MODELS = {
+  barrera_armada: {
+    label: 'Barrera antivuelco — armada',
+    file: 'models/barrera_armada.obj',
+    assembled: true,
+  },
   barrera: {
-    label: 'Barrera antivuelco exterior',
+    label: 'Barrera — piezas',
     file: 'models/barrera.obj',
   },
   enganche: {
-    label: 'Enganche modelo Hilux',
+    label: 'Enganche Hilux — piezas',
     file: 'models/enganche.obj',
   },
 };
@@ -199,6 +204,11 @@ function renderSolidList() {
 
 async function loadModel(key) {
   currentModel = key;
+  // Assembled models keep their real positions; loose parts get the grid.
+  gridLayout = !MODELS[key].assembled;
+  const layoutBtn = document.getElementById('btn-layout');
+  layoutBtn.classList.toggle('toggled', gridLayout);
+  layoutBtn.textContent = gridLayout ? 'Cuadrícula (O)' : 'Original (O)';
   document.querySelectorAll('.model-tab').forEach((t) =>
     t.classList.toggle('active', t.dataset.key === key));
   loadingEl.style.display = 'flex';
@@ -408,4 +418,4 @@ viewport.addEventListener('drop', async (e) => {
   }
 });
 
-loadModel('barrera');
+loadModel('barrera_armada');
