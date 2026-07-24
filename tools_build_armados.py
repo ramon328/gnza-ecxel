@@ -5,8 +5,8 @@
 import math
 
 FILLET_R = 250.0
-SEG_CIRCLE = 28
-SEG_ARC = 12
+SEG_CIRCLE = 40
+SEG_ARC = 32
 
 verts = []
 faces = []
@@ -317,7 +317,7 @@ def barra_interior(path_out, left_pts, right_pts, top_z, lean,
     reset()
     start_group('marco')
     pts = left_pts + right_pts
-    path = fillet_path([list(p) + [] for p in pts], r=120)
+    path = fillet_path([list(p) + [] for p in pts], r=160)
     # inclinar hacia atras: shear en y proporcional a z
     for p in path:
         p[1] -= lean * (p[2] / top_z)
@@ -438,7 +438,7 @@ for y in (75, 445):
         (-170, y, 750), (200, y, 750),
         (375, y, 490), (375, y, 50),
     ]
-    sweep_tube(fillet_path([list(p) for p in pts], r=90), MARCO_R)
+    sweep_tube(fillet_path([list(p) for p in pts], r=110), MARCO_R)
 start_group('pletinas')
 box(-270, 260, 640, 60, 420, 5, ry=math.radians(-42))
 box(290, 260, 625, 60, 420, 5, ry=math.radians(46))

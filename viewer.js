@@ -3,6 +3,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
 import { STLLoader } from 'three/addons/loaders/STLLoader.js';
 import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
 // Weld duplicated vertices and smooth normals (30° crease) so the tubes
 // render like the CAD drawings instead of showing tessellation facets.
@@ -109,6 +110,11 @@ container.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xf2f3f5);
+
+// Entorno de iluminacion para acabado metalico pulido.
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+scene.environmentIntensity = 0.55;
 
 const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100000);
 camera.up.set(0, 0, 1); // CAD convention: Z up
@@ -293,8 +299,8 @@ async function loadModel(key) {
         : (ACI_COLORS[aci] || 0x9aa5b1));
     const mat = new THREE.MeshStandardMaterial({
       color,
-      metalness: 0.25,
-      roughness: 0.45,
+      metalness: 0.4,
+      roughness: 0.32,
       side: THREE.DoubleSide,
       polygonOffset: true,
       polygonOffsetFactor: 1,
