@@ -13,7 +13,8 @@ function smoothGeometry(geometry) {
   return g;
 }
 
-const edgeMaterial = new THREE.LineBasicMaterial({ color: 0x232933 });
+// Bordes claros para que las piezas negras se lean sobre el fondo.
+const edgeMaterial = new THREE.LineBasicMaterial({ color: 0x8b939e });
 
 // Aristas estilo plano CAD: contornos y quiebres >25 grados.
 function attachEdges(mesh) {
@@ -57,39 +58,42 @@ const FALLBACK_PALETTE = [
   0xa0ab9c, 0x9aa0b8,
 ];
 
-// Colores por pieza para los modelos armados (estilo vista 3D de la lamina).
+// Acabado negro de fabrica (como los productos reales en las fotos),
+// con leves variaciones de tono para distinguir piezas.
 const NAME_COLORS = [
-  ['arco', 0x5b7fb5],
-  ['pata', 0x5fa88a],
-  ['placas_base', 0xd28bb0],
-  ['placas', 0x8f9bb0],
-  ['discos', 0xe0913f],
-  ['pertiga', 0xb5a05f],
-  ['focos', 0x6a6f78],
-  ['anclaje', 0xc98b5a],
-  ['malla', 0x9aa4b0],
-  ['barra', 0xd4b942],
-  ['soporte', 0x5fa88a],
-  ['bola', 0xe0913f],
-  ['neumatico', 0x3a3d42],
-  ['llanta', 0xb8bec6],
-  ['poste', 0x5b7fb5],
-  ['travesano', 0x5fa88a],
-  ['brazo', 0xd4b942],
-  ['refuerzo', 0x5fa88a],
-  ['tirante', 0x8f97a2],
-  ['esparragos', 0x8f97a2],
-  ['marco', 0xd4b942],
-  ['orejas', 0xd9534f],
-  ['alas', 0x8f97a2],
-  ['receptor', 0x4f9a94],
-  ['perno', 0x555b64],
-  ['vastago', 0x8f97a2],
-  ['canales', 0x5b7fb5],
-  ['base_angulos', 0x5fa88a],
-  ['pletinas', 0x5b7fb5],
-  ['disco', 0x5b7fb5],
-  ['placa', 0xd28bb0],
+  ['funda', 0x121316],
+  ['neumatico', 0x101214],
+  ['llanta', 0x3c4046],
+  ['malla', 0x2c2f34],
+  ['orejas', 0x232529],
+  ['vasos', 0x1c1e21],
+  ['pletinas', 0x232529],
+  ['vastago', 0x2a2d31],
+  ['mariposa', 0x2a2d31],
+  ['perno', 0x2a2d31],
+  ['esparragos', 0x2a2d31],
+  ['disco', 0x232529],
+  ['placa', 0x212327],
+  ['alas', 0x212327],
+  ['receptor', 0x26282c],
+  ['base_angulos', 0x212327],
+  ['corona', 0x212327],
+  ['travesano', 0x212327],
+  ['soporte', 0x212327],
+  ['bola', 0x2e3135],
+  ['arco', 0x1d1f22],
+  ['pata', 0x1d1f22],
+  ['marco', 0x1d1f22],
+  ['barra', 0x1d1f22],
+  ['poste', 0x1d1f22],
+  ['brazo', 0x1d1f22],
+  ['refuerzo', 0x212327],
+  ['tirante', 0x2a2d31],
+  ['canales', 0x212327],
+  ['discos', 0x232529],
+  ['anclaje', 0x212327],
+  ['pertiga', 0x1d1f22],
+  ['focos', 0x1d1f22],
 ];
 
 function colorForName(name) {
@@ -114,7 +118,7 @@ scene.background = new THREE.Color(0xf2f3f5);
 // Entorno de iluminacion para acabado metalico pulido.
 const pmrem = new THREE.PMREMGenerator(renderer);
 scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-scene.environmentIntensity = 0.55;
+scene.environmentIntensity = 0.85;
 
 const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100000);
 camera.up.set(0, 0, 1); // CAD convention: Z up
@@ -378,8 +382,8 @@ async function loadModel(key) {
         : (ACI_COLORS[aci] || 0x9aa5b1));
     const mat = new THREE.MeshStandardMaterial({
       color,
-      metalness: 0.4,
-      roughness: 0.32,
+      metalness: 0.5,
+      roughness: 0.38,
       side: THREE.DoubleSide,
       polygonOffset: true,
       polygonOffsetFactor: 1,

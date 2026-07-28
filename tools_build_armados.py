@@ -262,25 +262,15 @@ start_group('placas_base')
 for (px, py) in ((-430, 0), (430, 0), (-660, 890), (660, 890)):
     box(px, py, 4, 100, 180, 8)
 
-start_group('discos_baliza')
+# Vasos baliza cilindricos sobre los extremos del tramo superior (foto)
+start_group('vasos_baliza')
 for sx in (-1, 1):
-    cylinder((sx*470, 430, 660), (sx*470, 430, 795), 8)
-    cylinder((sx*470, 430, 798), (sx*470, 430, 802), 67.5, nseg=32)
+    cylinder((sx*240, 0, H+36), (sx*240, 0, H+176), 64, nseg=32)
 
-start_group('pertigas')
-for sx in (-1, 1):
-    base = (sx*690, 0, 640)
-    box(base[0], base[1], base[2], 60, 60, 90)
-    cylinder((base[0], base[1], base[2]+45), (base[0], base[1], base[2]+445), 12)
-
-start_group('focos')
-for sx in (-1, 1):
-    cx = sx*150
-    box(cx, -20, H+55, 90, 40, 60)
-    cylinder((cx, -40, H+55), (cx, -70, H+55), 35, nseg=24)
-
-start_group('anclaje')
-box(0, 40, H-40, 410, 180, 8)
+# Pletinas de montaje planas con perforaciones sobre el tubo superior (foto)
+start_group('pletinas_montaje')
+for px in (-160, 0, 160):
+    box(px, 0, H+42, 100, 46, 5)
 
 start_group('malla_luneta')
 
@@ -322,6 +312,11 @@ def barra_interior(path_out, left_pts, right_pts, top_z, lean,
     for p in path:
         p[1] -= lean * (p[2] / top_z)
     sweep_tube(path, CANERIA_R)
+    # Funda acolchada negra sobre el tramo superior (como en las fotos)
+    pad = [p for p in path if p[2] >= top_z * 0.52]
+    if len(pad) > 2:
+        start_group('funda_acolchada')
+        sweep_tube(pad, CANERIA_R * 1.75)
     start_group('placas_base')
     for pt in (left_pts[0], right_pts[-1]):
         box(pt[0], pt[1], 7, placa[0], placa[1], placa[2])
@@ -451,26 +446,40 @@ for y in (75, 445):
     p1 = (-380, y, 720)
     cylinder(p0, p1, 8, nseg=10)
     box(-388, y, 729, 60, 16, 12, ry=math.radians(-45))
+# Poste divisor central entre los dos marcos (foto vista superior)
+start_group('poste_central')
+cylinder((15, 260, 50), (15, 260, 748), 13, nseg=14)
 rueda((0, 260, 400), axis='y', R=290, r=110, hub=180)
 write_obj('models/portarruedas_kitcar_armado.obj')
 
 
-# ============== PORTARRUEDAS ESTANDAR C/CONO (HN-25) ==============
+# ============== PORTARRUEDAS ESTANDAR C/CONO (HN-25, bastidor 4 postes) ==============
 reset()
-start_group('placa_base')
-box(0, 0, 2.5, 150, 100, 5)
-start_group('poste_canal')
-box(0, 0, 355, 80, 40, 705)              # canal C 80x40
-start_group('canales_superiores')
-box(0, -60, 620, 80, 80, 40)
+POSTE_R = 14
+ALTO = 950
+start_group('postes')
+for sx, sy in ((-1, -1), (1, -1), (-1, 1), (1, 1)):
+    pts = [
+        (sx*150, sy*125, 10),
+        (sx*150, sy*125, ALTO-180),
+        (sx*95, sy*55, ALTO),
+    ]
+    sweep_tube(fillet_path([list(p) for p in pts], r=120), POSTE_R)
+start_group('corona')
+box(0, 0, ALTO+18, 280, 150, 36)
+start_group('travesanos')
+for z in (240, 520):
+    for sy in (-1, 1):
+        box(0, sy*125, z, 300, 40, 5, rz=0)
+    box(0, 0, z-30, 40, 250, 5)
+start_group('placas_perforadas')
 for sx in (-1, 1):
-    box(sx*110, -40, 655, 140, 40, 80)   # canales C laterales
-start_group('soporte_triangular')
-box(0, -98, 500, 5, 195, 195, rx=math.radians(45))
-start_group('refuerzo')
-box(0, -60, 690, 75, 40, 5)
+    box(sx*140, 0, 240, 5, 220, 60)
 start_group('vastago')
-cylinder((0, -80, 620), (0, -290, 620), 9.5, nseg=12)  # hilo 3/4
-box(0, -300, 620, 90, 14, 22)            # perno mariposa
-rueda((0, -212, 620), axis='y')
+cylinder((0, 0, ALTO-320), (0, 0, ALTO+250), 9.5, nseg=12)  # hilo 3/4
+start_group('disco')
+cylinder((0, 0, ALTO-318), (0, 0, ALTO-314), 75, nseg=32)
+start_group('mariposa')
+box(0, 0, ALTO+260, 110, 16, 24, rz=math.radians(25))
+rueda((0, 0, ALTO+142), axis='z')
 write_obj('models/portarruedas_mitta_armado.obj')
