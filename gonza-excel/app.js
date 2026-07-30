@@ -22,6 +22,15 @@ let dirty = false;
 const $ = (id) => document.getElementById(id);
 const log = $('log');
 
+if (typeof XLSX === 'undefined') {
+  document.addEventListener('DOMContentLoaded', () => {
+    const d = document.createElement('div');
+    d.className = 'msg err';
+    d.textContent = 'No se pudo cargar la librería de Excel (vendor/xlsx.full.min.js). Revisa que la carpeta vendor esté junto a index.html.';
+    log.appendChild(d);
+  });
+}
+
 function esc(s) {
   return String(s).replace(/[&<>"']/g, (c) =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -89,16 +98,20 @@ wireDrop('drop-master', 'file-master', async (files) => {
     updateButtons();
   } catch (e) {
     msg('err', 'No se pudo leer el maestro: ' + esc(e.message));
+  } finally {
+    // permite volver a elegir el mismo archivo (change vuelve a disparar)
+    $('file-master').value = '';
   }
 });
 
 wireDrop('drop-in', 'file-in', async (files) => {
   if (!files.length) return;
-  incoming = [];
+  // acumula: se pueden elegir los archivos de a uno o varios a la vez
   for (const f of files) {
     try {
       const buf = await f.arrayBuffer();
       const hash = await fileHash(buf);
+      if (incoming.some((i) => i.hash === hash)) continue;  // ya en la lista
       incoming.push({ name: f.name, wb: readWb(buf), hash });
     } catch (e) {
       msg('err', `No se pudo leer <b>${esc(f.name)}</b>: ${esc(e.message)}`);
@@ -106,8 +119,11 @@ wireDrop('drop-in', 'file-in', async (files) => {
   }
   if (incoming.length) {
     $('drop-in').classList.add('loaded');
-    $('in-label').innerHTML = `Archivos cargados: <span class="file-tag">${esc(incoming.map((i) => i.name).join(', '))}</span>`;
+    $('in-label').innerHTML =
+      `Archivos listos (${incoming.length}): <span class="file-tag">${esc(incoming.map((i) => i.name).join(', '))}</span>` +
+      '<br><small>Puedes seguir agregando más antes de insertar.</small>';
   }
+  $('file-in').value = '';
   updateButtons();
 });
 
