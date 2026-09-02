@@ -1,36 +1,51 @@
 # Sincronizador Excel — hojas JULIO y VALORES
 
-Web que reemplaza la "carpeta anclada del escritorio": recibe archivos Excel
-nuevos y **inserta sus datos en el maestro** (VARIABLES … .xlsm), marcando cada
-fila insertada con estado **LEÍDO**.
+Reemplaza la "carpeta anclada del escritorio". Recibe archivos Excel nuevos e
+**inserta sus datos en el maestro** (VARIABLES.xlsm), marcando cada fila
+insertada con estado **LEÍDO**.
+
+## Estructura esperada
+
+### Maestro (VARIABLES.xlsm)
+
+**JULIO** (hoja obligatoria):
+- Columnas: Cliente, Contacto, OT, OC/VIN/PATENTE, Equipamiento, Modelo, CANT, Fecha, [técnicos…]
+- Deduplicación por: Cliente + OT + OC/VIN + Equipamiento + Modelo + CANT
+- ESTADO se agrega automáticamente en columna V (si no existe)
+
+**VALORES** (hoja obligatoria):
+- Empieza en A2 (fila 1 vacía, header en fila 2)
+- Columnas: [vacío], DETALLE, OTROS CLIENTES, TATTERSALL Y CL, MITTA, [cálculos…]
+- Deduplicación por: DETALLE
+- ESTADO se agrega en columna F (si no existe)
+
+### Archivos nuevos
+
+Deben tener las mismas hojas (JULIO / VALORES) con estructura idéntica.
 
 ## Cómo funciona
 
-1. **Subir el maestro** (el Excel VARIABLES con las hojas JULIO y VALORES).
-2. **Subir archivos nuevos** — solo se leen las hojas cuyo título sea
-   `JULIO` o `VALORES` (mayúsculas/tildes indiferentes).
-   - **JULIO**: las filas nuevas (Cliente/OT no repetidos) se agregan al final
-     y se marcan `LEÍDO` en la columna ESTADO.
-   - **VALORES**: cada fila se busca por DETALLE; si existe se actualizan sus
-     valores, si no existe se agrega. También queda `LEÍDO`.
-3. **Descargar** el maestro actualizado (conserva las macros .xlsm).
+1. **Paso 1:** Sube el maestro (VARIABLES.xlsm con hojas JULIO y VALORES).
+2. **Paso 2:** Sube archivos nuevos. Solo se leen hojas llamadas JULIO o VALORES
+   (case-insensitive, tildes ignoradas).
+   - **JULIO**: Filas nuevas (Cliente/OT no repetidos) se agregan al final, ESTADO=LEÍDO.
+   - **VALORES**: Por cada DETALLE, si existe se actualizan valores, si no se agrega. ESTADO=LEÍDO.
+3. **Paso 3:** Descarga el maestro actualizado (conserva macros .xlsm).
 
-El control de "qué ya se leyó" vive dentro del propio Excel, en la hoja
-`CONTROL_LECTURAS` (fecha, archivo, huella SHA-256, hoja, filas, estado).
-Si se vuelve a subir un archivo ya leído, el sistema lo detecta por su huella
-y lo omite.
+Cada archivo leído queda registrado en hoja `CONTROL_LECTURAS` con:
+- Fecha, nombre archivo, huella SHA-256, hoja, cantidad de filas, estado LEÍDO
+- Re-upload detectado automáticamente por huella — se omite si ya fue leído.
 
-## Sin servidor, sin base de datos
+## Procesamiento en navegador
 
-Todo se procesa en el navegador con [SheetJS](https://sheetjs.com). No hay
-Supabase ni almacenamiento: al recargar la página siempre se pide subir los
-archivos de nuevo, tal como se solicitó.
+Sin servidor, sin Supabase, sin guardar datos. Al recargar, pide subir de nuevo.
+Todo cálculo y merge ocurre en el navegador usando [SheetJS](https://sheetjs.com).
 
-## Uso
+## Ejecutar
 
 ```bash
 python3 -m http.server 8000
-# abrir http://localhost:8000/gonza-excel/
+# Abre http://localhost:8000/gonza-excel/
 ```
 
-O publicar la carpeta `gonza-excel/` en cualquier hosting estático.
+O deploy en hosting estático (Vercel, Netlify, GitHub Pages, etc.).
