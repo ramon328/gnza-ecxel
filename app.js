@@ -194,9 +194,6 @@ function mergeJulio(masterWs, inWs) {
   const im = sheetToMatrix(inWs);
   const off = refOffset(masterWs);
   const header = mm[0] || [];
-  // columna ESTADO: primera cabecera vacía después de las columnas con nombre
-  let estadoCol = header.findIndex((h, i) => i >= 8 && (h === null || h === ''));
-  if (estadoCol === -1) estadoCol = header.length;
   const KEY_COLS = [0, 2, 3, 4, 5, 6]; // Cliente, OT, OC/VIN, Equipamiento, Modelo, CANT
   const seen = new Set();
   for (let i = 1; i < mm.length; i++) {
@@ -204,6 +201,8 @@ function mergeJulio(masterWs, inWs) {
       seen.add(rowFingerprint(mm[i], KEY_COLS));
     }
   }
+  // ESTADO en col 21 (V) — después de técnicos
+  const estadoCol = 21;
   setCell(masterWs, off.r, off.c + estadoCol, 'ESTADO');
   let r = lastDataRow(mm) + 1;
   const inserted = [];
@@ -228,16 +227,16 @@ function mergeValores(masterWs, inWs) {
   const mm = sheetToMatrix(masterWs);
   const im = sheetToMatrix(inWs);
   const off = refOffset(masterWs);
-  // en el maestro, DETALLE está en la columna B (índice 1); valores en C-E
+  // Header en fila 0 (después de offset), DETALLE en col 1, valores en 2-4
   const byDetalle = new Map();
-  for (let i = 0; i < mm.length; i++) {
+  for (let i = 1; i < mm.length; i++) {  // i=0 es header, datos desde i=1
     const d = mm[i] && mm[i][1];
-    if (d) byDetalle.set(normName(d), i);
+    if (d && normName(d) !== 'DETALLE') byDetalle.set(normName(d), i);
   }
-  const estadoCol = 5; // columna F
+  const estadoCol = 5; // columna F — nueva columna de estado
   const inserted = [];
   let last = lastDataRow(mm);
-  for (let i = 0; i < im.length; i++) {
+  for (let i = 1; i < im.length; i++) {  // i=0 es header
     const row = im[i];
     const d = row && row[1];
     if (!d || normName(d) === 'DETALLE') continue;
@@ -255,6 +254,8 @@ function mergeValores(masterWs, inWs) {
     setCell(masterWs, off.r + r, off.c + estadoCol, 'LEÍDO');
     inserted.push({ fila: off.r + r + 1, datos: [d, ...values] });
   }
+  // Agregar header ESTADO si no existe
+  setCell(masterWs, off.r, off.c + estadoCol, 'ESTADO');
   return inserted;
 }
 
